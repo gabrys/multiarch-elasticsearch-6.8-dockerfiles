@@ -1,62 +1,31 @@
-# Dockerfiles
+This is a repo for multi-arch build of Elasticsearch 6.8
 
-## About this Repository
+The multi-arch build is published to https://hub.docker.com/r/gabrys/elasticsearch
 
-This repo is used to store the Dockerfiles which can be used to build Docker images 
-for each product released in the stack. Those Dockerfiles were generated from the 
-products' own repositories for which you can get the links in the sections below. 
-Please note that **issues are disabled on this repo** and that all issues and PRs 
-must be filed in the products' repositories.
+In order to build this image:
 
-## Elasticsearch
+```
+# Build:
+$ cd elasticsearch
+$ docker buildx build --tag gabrys/elasticsearch:6.8 .
+```
 
-**Elasticsearch** is a distributed, RESTful search and analytics engine capable of
-solving a growing number of use cases. As the heart of the Elastic Stack, it
-centrally stores your data so you can discover the expected and uncover the
-unexpected.
+In order to push to Docker Hub:
 
-For more information about Elasticsearch, please visit
-https://www.elastic.co/products/elasticsearch.
+```
+$ cd elasticsearch
+# Log in to Docker Hub:
+$ security -v unlock-keychain ~/Library/Keychains/login.keychain-db
+$ docker login -u gabrys
+$ docker buildx create --use
+# Build and push:
+$ docker buildx build --platform linux/arm64/v8,linux/amd64 --push --tag gabrys/elasticsearch:6.8 .
+```
 
-### Where to file issues and PRs
+Changes vs official 6.8 branch:
 
-- [Issues](https://github.com/elastic/elasticsearch/issues)
-- [PRs](https://github.com/elastic/elasticsearch/pulls)
+https://github.com/gabrys/multiarch-elasticsearch-6.8-dockerfiles/compare/6.8...6.8-arm
 
-### Where to get help
-
-- [Elasticsearch Discuss Forums](https://discuss.elastic.co/c/elasticsearch) 
-- [Elasticsearch Documentation](https://www.elastic.co/guide/en/elasticsearch/reference/master/index.html)
-
-## Kibana
-
-**Kibana** lets you visualize your Elasticsearch data and navigate the Elastic Stack, 
-so you can do anything from learning why you're getting paged at 2:00 a.m. to 
-understanding the impact rain might have on your quarterly numbers.
-
-For more information about Kibana, please visit
-https://www.elastic.co/products/kibana.
-
-### Where to file issues and PRs
-
-- [Issues](https://github.com/elastic/kibana/issues)
-- [PRs](https://github.com/elastic/kibana/pulls)
-
-
-### Where to get help
-
-- [Kibana Discuss Forums](https://discuss.elastic.co/c/kibana) 
-- [Kibana Documentation](https://www.elastic.co/guide/en/kibana/current/index.html)
-
-## Still need help?
-
-You can learn more about the Elastic Community and also understand how to get more help 
-visiting [Elastic Community](https://www.elastic.co/community).
-
-
-This software is governed by their applicable licenses,
-and includes the full set of [free
-features](https://www.elastic.co/subscriptions).
-
-View the detailed release notes
-[here](https://www.elastic.co/guide/en/elasticsearch/reference/6.8/es-release-notes.html).
+1. Download the JDK for the detected architecture rather than always for x64
+2. Remove `UseAVX=2` setting on non-x64
+3. Add `xpack.ml.enabled: false` as it doesn't work outside x64
