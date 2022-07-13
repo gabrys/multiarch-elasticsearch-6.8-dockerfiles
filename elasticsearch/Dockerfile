@@ -16,7 +16,8 @@ FROM centos:7 AS builder
 ENV PATH /usr/share/elasticsearch/bin:$PATH
 ENV JAVA_HOME /opt/jdk-15.0.1+9
 
-RUN for iter in {1..10}; do curl -L -s -S https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.1%2B9/OpenJDK15U-jdk_x64_linux_hotspot_15.0.1_9.tar.gz | tar -C /opt -zx && \
+RUN arch=$(uname -m | sed s/x86_64/x64/); \
+    for iter in {1..10}; do curl -L -s -S https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.1%2B9/OpenJDK15U-jdk_${arch}_linux_hotspot_15.0.1_9.tar.gz | tar -C /opt -zx && \
     exit_code=0 && break || exit_code=\$? && echo "download error: retry $iter in 10s" && sleep 10; done; \
     (exit $exit_code)
  
@@ -101,6 +102,9 @@ LABEL org.label-schema.build-date="2022-01-06T21:30:50.087716Z" \
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 # Dummy overridable parameter parsed by entrypoint
 CMD ["eswrapper"]
+
+# Apply UseAVX=2 only on x64
+RUN if [ $(uname -m) != x86_64 ]; then sed -i 's/.*:UseAVX=/#\0/' /usr/share/elasticsearch/config/jvm.options ; fi
 
 ################################################################################
 # End of multi-stage Dockerfile
